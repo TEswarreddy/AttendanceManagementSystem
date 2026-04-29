@@ -170,6 +170,24 @@ export default function FacultyDashboard() {
     return grid
   }, [timetableDays])
 
+  const periodNumbers = useMemo(() => {
+    const all = new Set()
+    DAY_COLUMNS.forEach(({ key }) => {
+      safeArray(timetableDays[key]).forEach((slot) => {
+        const periodNumber = Number(slot?.periodNumber || 0)
+        if (Number.isFinite(periodNumber) && periodNumber > 0) {
+          all.add(periodNumber)
+        }
+      })
+    })
+
+    if (all.size === 0) {
+      return Array.from({ length: 8 }, (_, index) => index + 1)
+    }
+
+    return Array.from(all).sort((a, b) => a - b)
+  }, [timetableDays])
+
   const todaySchedule = useMemo(() => safeArray(timetableDays[currentDayKey]), [timetableDays, currentDayKey])
 
   const schedule = useMemo(() => {
@@ -291,7 +309,7 @@ export default function FacultyDashboard() {
     if (!slot) {
       return (
         <td key={`${dayKey}-${periodNumber}`} className="border-b border-slate-200 px-2 py-2 align-top">
-          <div className="min-h-[76px] rounded-lg border border-dashed border-slate-200 bg-slate-50/70" />
+          <div className="flex min-h-[76px] items-center justify-center rounded-lg border border-dashed border-slate-200 bg-slate-50/70 text-xs font-medium text-slate-500">Free Period</div>
         </td>
       )
     }
@@ -555,11 +573,11 @@ export default function FacultyDashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {Array.from({ length: 8 }, (_, index) => index + 1).map((periodNumber) => (
+                    {periodNumbers.map((periodNumber) => (
                       <tr key={periodNumber} className="even:bg-slate-50/70">
                         <th className="sticky left-0 z-10 border-b border-r border-slate-200 bg-white px-3 py-2 text-left align-top">
                           <p className="font-semibold text-slate-900">Period {periodNumber}</p>
-                          <p className="text-xs text-slate-500">{PERIOD_TIMES[periodNumber]}</p>
+                          <p className="text-xs text-slate-500">{PERIOD_TIMES[periodNumber] || "Time TBD"}</p>
                         </th>
 
                         {DAY_COLUMNS.map((day) => renderTimetableCell(day.key, periodNumber))}

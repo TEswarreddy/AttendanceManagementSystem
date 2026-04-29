@@ -28,6 +28,14 @@ const normalizeDate = (date) => {
 
 const getDayName = (date) => DAY_NAMES[new Date(date).getUTCDay()];
 
+const getFacultyLookupIds = (user) => {
+  const ids = [user?.profileId, user?._id]
+    .filter(Boolean)
+    .map((value) => String(value));
+
+  return [...new Set(ids)];
+};
+
 const getAssignedClassSlot = async ({ facultyId, subjectId, day, periodNumber, semester, section }) => {
   const baseQuery = {
     facultyId,
@@ -241,15 +249,15 @@ const getPeriodAttendanceStatus = catchAsync(async (req, res) => {
 });
 
 const getFacultyTimetable = catchAsync(async (req, res) => {
-  const facultyId = req.user.profileId;
+  const facultyLookupIds = getFacultyLookupIds(req.user);
   const requestedAcademicYear = req.query.academicYear;
   let academicYear = requestedAcademicYear || dateHelper.getAcademicYear(new Date());
 
-  let rows = await Timetable.getFacultyTimetable(facultyId, academicYear);
+  let rows = await Timetable.getFacultyTimetable(facultyLookupIds, academicYear);
 
-  if (!requestedAcademicYear && (!rows || rows.length === 0)) {
+  if (requestedAcademicYear && (!rows || rows.length === 0)) {
     const availableYears = await Timetable.find({
-      facultyId,
+      facultyId: { $in: facultyLookupIds },
       isActive: true,
     }).distinct("academicYear");
 
@@ -260,7 +268,24 @@ const getFacultyTimetable = catchAsync(async (req, res) => {
 
     if (normalizedYears.length > 0) {
       academicYear = normalizedYears[normalizedYears.length - 1];
-      rows = await Timetable.getFacultyTimetable(facultyId, academicYear);
+      rows = await Timetable.getFacultyTimetable(facultyLookupIds, academicYear);
+    }
+  }
+
+  if (!requestedAcademicYear && (!rows || rows.length === 0)) {
+    const availableYears = await Timetable.find({
+      facultyId: { $in: facultyLookupIds },
+      isActive: true,
+    }).distinct("academicYear");
+
+    const normalizedYears = availableYears
+      .filter(Boolean)
+      .map((year) => String(year).trim())
+      .sort();
+
+    if (normalizedYears.length > 0) {
+      academicYear = normalizedYears[normalizedYears.length - 1];
+      rows = await Timetable.getFacultyTimetable(facultyLookupIds, academicYear);
     }
   }
 
@@ -311,17 +336,21 @@ const DAY_POSITION = {
 const toSafeString = (value) => String(value || "").trim();
 
 const getFacultyAssignedClasses = catchAsync(async (req, res) => {
-  const facultyId = req.user.profileId;
+  const facultyLookupIds = getFacultyLookupIds(req.user);
   const page = toPositiveInt(req.query.page, 1);
   const limit = Math.min(toPositiveInt(req.query.limit, 10), 100);
 
   const requestedAcademicYear = toSafeString(req.query.academicYear);
   let academicYear = requestedAcademicYear || dateHelper.getAcademicYear(new Date());
 
-  let rows = await Timetable.getFacultyTimetable(facultyId, academicYear);
+  let rows = await Timetable.getFacultyTimetable(facultyLookupIds, academicYear);
 
-  if (!requestedAcademicYear && (!rows || rows.length === 0)) {
-    const availableYears = await Timetable.find({ facultyId, isActive: true }).distinct("academicYear");
+  if (requestedAcademicYear && (!rows || rows.length === 0)) {
+    const availableYears = await Timetable.find({
+      facultyId: { $in: facultyLookupIds },
+      isActive: true,
+    }).distinct("academicYear");
+
     const normalizedYears = availableYears
       .filter(Boolean)
       .map((year) => String(year).trim())
@@ -329,7 +358,20 @@ const getFacultyAssignedClasses = catchAsync(async (req, res) => {
 
     if (normalizedYears.length > 0) {
       academicYear = normalizedYears[normalizedYears.length - 1];
-      rows = await Timetable.getFacultyTimetable(facultyId, academicYear);
+      rows = await Timetable.getFacultyTimetable(facultyLookupIds, academicYear);
+    }
+  }
+
+  if (!requestedAcademicYear && (!rows || rows.length === 0)) {
+    const availableYears = await Timetable.find({ facultyId: { $in: facultyLookupIds }, isActive: true }).distinct("academicYear");
+    const normalizedYears = availableYears
+      .filter(Boolean)
+      .map((year) => String(year).trim())
+      .sort();
+
+    if (normalizedYears.length > 0) {
+      academicYear = normalizedYears[normalizedYears.length - 1];
+      rows = await Timetable.getFacultyTimetable(facultyLookupIds, academicYear);
     }
   }
 
