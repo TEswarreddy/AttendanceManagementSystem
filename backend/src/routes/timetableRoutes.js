@@ -13,7 +13,7 @@ const router = express.Router();
 router.get(
 	"/",
 	protect,
-	authorize("faculty", "class_teacher", "admin", "time_table_coordinator", "attendance_coordinator"),
+	authorize("faculty", "class_teacher", "admin", "time_table_coordinator", "attendance_coordinator", "hod"),
 	catchAsync(async (req, res) => {
 		if (req.user.role === "admin" || req.user.role === "time_table_coordinator") {
 			if (!req.query.facultyId) {
@@ -75,7 +75,7 @@ router.get(
 router.post(
 	"/",
 	protect,
-	authorize("admin", "time_table_coordinator"),
+	authorize("admin", "time_table_coordinator", "attendance_coordinator", "hod"),
 	(req, res, next) => {
 		if (req.user.role === "admin") {
 			return adminController.createTimetable(req, res, next);
@@ -87,7 +87,7 @@ router.post(
 router.put(
 	"/:id",
 	protect,
-	authorize("admin", "time_table_coordinator"),
+	authorize("admin", "time_table_coordinator", "attendance_coordinator", "hod"),
 	(req, res, next) => {
 		if (req.user.role === "admin") {
 			return adminController.updateTimetable(req, res, next);
@@ -100,7 +100,7 @@ router.put(
 router.delete(
 	"/:id",
 	protect,
-	authorize("admin", "time_table_coordinator"),
+	authorize("admin", "time_table_coordinator", "attendance_coordinator", "hod"),
 	(req, res, next) => {
 		if (req.user.role === "admin") {
 			return adminController.deactivateTimetable(req, res, next);

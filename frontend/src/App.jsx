@@ -141,7 +141,7 @@ function AppRoutes() {
           <Route path="/hod/faculty" element={<HodFaculty />} />
         </Route>
 
-        <Route element={<ProtectedRoute allowedRoles={['time_table_coordinator', 'admin']} />}>
+        <Route element={<ProtectedRoute allowedRoles={['time_table_coordinator', 'attendance_coordinator', 'hod', 'admin']} />}>
           <Route path="/ttc/dashboard" element={<FacultyDashboard />} />
           <Route path="/ttc/timetable" element={<TimetableBuilder />} />
         </Route>

@@ -7,7 +7,7 @@ import { apiGet, apiPost, apiPut } from '@/api/axiosInstance'
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 const DAY_KEYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
-const PERIODS = [
+const FALLBACK_PERIODS = [
   { number: 1, time: '09:00-09:50' },
   { number: 2, time: '09:50-10:40' },
   { number: 3, time: '10:50-11:40' },
@@ -73,11 +73,36 @@ export default function TimetableBuilder() {
     queryFn: () => apiGet('/subjects'),
   })
 
+  const periodsQuery = useQuery({
+    queryKey: ['hod-timetable', 'periods'],
+    queryFn: () => apiGet('/admin/periods'),
+  })
+
   const facultyRows = useMemo(() => {
     const payload = readData(facultyQuery.data)
     const rows = toList(payload.data || payload.items || payload)
     return rows
   }, [facultyQuery.data])
+
+  const periodRows = useMemo(() => {
+    const payload = readData(periodsQuery.data)
+    const rows = toList(payload.periods || payload.items || payload.data || payload)
+    return rows
+      .map((period) => {
+        const number = Number(period?.periodNumber)
+        if (!Number.isFinite(number)) return null
+        const start = period?.startTime || ''
+        const end = period?.endTime || ''
+        return {
+          number,
+          time: start && end ? `${start}-${end}` : period?.label || `Period ${number}`,
+        }
+      })
+      .filter(Boolean)
+      .sort((a, b) => a.number - b.number)
+  }, [periodsQuery.data])
+
+  const periods = periodRows.length ? periodRows : FALLBACK_PERIODS
 
   const subjectRows = useMemo(() => {
     const payload = readData(subjectsQuery.data)
@@ -123,7 +148,7 @@ export default function TimetableBuilder() {
           return toList(payload.timetables).map((item) => ({ ...item }))
         })
     },
-    enabled: facultyRows.length > 0 && Boolean(selectedAcademicYear),
+    enabled: facultyRows.length > 0,
   })
 
   const serverEntries = useMemo(() => {
@@ -295,7 +320,7 @@ export default function TimetableBuilder() {
       const span = Number(form.span || 1)
       const schedule = Array.from({ length: span }, (_, index) => {
         const currentPeriod = Number(periodNumber) + index
-        const periodMeta = PERIODS.find((item) => Number(item.number) === currentPeriod)
+        const periodMeta = periods.find((item) => Number(item.number) === currentPeriod)
         const [startTime = '', endTime = ''] = String(periodMeta?.time || '').split('-')
 
         return {
@@ -381,7 +406,7 @@ export default function TimetableBuilder() {
       }
 
       if (targetTimetableId) {
-        await apiPut(`/hod/timetable/${targetTimetableId}`, body)
+        await apiPut(`/timetable/${targetTimetableId}`, body)
         return {
           targetTimetableId,
           schedule: mergedSchedule,
@@ -398,7 +423,7 @@ export default function TimetableBuilder() {
         }
       }
 
-      const created = await apiPost('/hod/timetable', body)
+      const created = await apiPost('/timetable', body)
       const createdPayload = readData(created)
       const createdTimetableId = createdPayload?.timetable?._id || createdPayload?.data?.timetable?._id
 
@@ -451,7 +476,7 @@ export default function TimetableBuilder() {
           !(String(slot.day).toLowerCase() === String(existing.day).toLowerCase() && Number(slot.periodNumber) === Number(existing.periodNumber))
       )
 
-      await apiPut(`/hod/timetable/${existing.timetableId}`, {
+      await apiPut(`/timetable/${existing.timetableId}`, {
         schedule: nextSchedule,
       })
 
@@ -495,7 +520,7 @@ export default function TimetableBuilder() {
         restorePayload.academicYear = change.previousTimetable.academicYear
       }
 
-      await apiPut(`/hod/timetable/${change.targetTimetableId}`, restorePayload)
+      await apiPut(`/timetable/${change.targetTimetableId}`, restorePayload)
 
       return change.previousEntries
     },
@@ -653,7 +678,7 @@ export default function TimetableBuilder() {
                 <thead>
                   <tr className="bg-slate-900 text-white">
                     <th className="px-3 py-2 text-left text-xs uppercase tracking-wide">Day</th>
-                    {PERIODS.slice(0, 7).map((period) => (
+                    {periods.map((period) => (
                       <th key={period.number} className="px-3 py-2 text-left text-xs uppercase tracking-wide">
                         <p>P{period.number}</p>
                         <p className="font-normal normal-case text-[10px] text-slate-200">{period.time}</p>
@@ -665,7 +690,7 @@ export default function TimetableBuilder() {
                   {DAYS.map((dayLabel, dayIndex) => (
                     <tr key={dayLabel} className="border-b border-slate-200 even:bg-slate-50">
                       <th className="px-3 py-2 text-left align-top font-semibold text-slate-900">{dayLabel}</th>
-                      {PERIODS.slice(0, 7).map((period, periodIndex) => {
+                      {periods.map((period, periodIndex) => {
                         const dayKey = DAY_KEYS[dayIndex]
                         const cell = getCell(dayLabel, period.number)
                         const subject = subjectMap.get(String(cell?.subjectId || ''))
