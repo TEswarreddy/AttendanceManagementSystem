@@ -1,0 +1,293 @@
+.public-navbar {
+  --nav-bg: rgba(255, 255, 255, 0.94);
+  --nav-border: #e5e9f3;
+  --nav-text: #24324a;
+  --nav-muted: #64748b;
+  --nav-primary: #19408a;
+  --nav-primary-soft: #eef3ff;
+  --nav-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+  --layout-max-width: 1440px;
+  --layout-inline-padding: clamp(0.85rem, 2vw, 1.75rem);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(14px);
+  background: var(--nav-bg);
+  border-bottom: 1px solid var(--nav-border);
+  box-shadow: var(--nav-shadow);
+}
+
+.public-navbar--transparent {
+  --nav-bg: rgba(255, 255, 255, 0.78);
+}
+
+.public-navbar__container {
+  max-width: var(--layout-max-width);
+  margin: 0 auto;
+  height: 4.5rem;
+  padding: 0 var(--layout-inline-padding);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.2rem;
+}
+
+.public-navbar__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+}
+
+.public-navbar__brand-logo {
+  width: 2.25rem;
+  height: 2.25rem;
+  object-fit: cover;
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.18);
+}
+
+.public-navbar__brand-text {
+  color: #0f172a;
+  font-weight: 700;
+  font-size: clamp(0.95rem, 1vw, 1.05rem);
+  letter-spacing: 0.01em;
+}
+
+.public-navbar__desktop-links {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.public-navbar__link {
+  padding: 0.56rem 0.9rem;
+  border-radius: 0.65rem;
+  color: var(--nav-text);
+  font-weight: 600;
+  font-size: 0.92rem;
+  text-decoration: none;
+  transition: background-color 0.22s ease, color 0.22s ease, transform 0.22s ease;
+}
+
+.public-navbar__link:hover {
+  color: var(--nav-primary);
+  background: var(--nav-primary-soft);
+  transform: translateY(-1px);
+}
+
+.public-navbar__link--active {
+  color: var(--nav-primary);
+  background: var(--nav-primary-soft);
+}
+
+.public-navbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.public-navbar__login-btn {
+  text-decoration: none;
+  border-radius: 999px;
+  padding: 0.56rem 1.15rem;
+  color: #fff;
+  background: linear-gradient(135deg, #19408a 0%, #2563eb 100%);
+  font-weight: 700;
+  font-size: 0.9rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 10px 20px rgba(37, 99, 235, 0.25);
+}
+
+.public-navbar__login-btn--ghost {
+  color: var(--nav-primary);
+  background: #fff;
+  border: 1px solid #bfdbfe;
+  box-shadow: none;
+}
+
+.public-navbar__login-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 24px rgba(37, 99, 235, 0.34);
+}
+
+.public-navbar__icon-btn,
+.public-navbar__profile-btn,
+.public-navbar__menu-btn {
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+}
+
+.public-navbar__icon-btn,
+.public-navbar__menu-btn {
+  width: 2.45rem;
+  height: 2.45rem;
+  border-radius: 0.72rem;
+  display: grid;
+  place-items: center;
+  color: var(--nav-muted);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.public-navbar__icon-btn:hover,
+.public-navbar__menu-btn:hover {
+  background: var(--nav-primary-soft);
+  color: var(--nav-primary);
+}
+
+.public-navbar__icon,
+.public-navbar__avatar,
+.public-navbar__chevron {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+.public-navbar__profile {
+  position: relative;
+}
+
+.public-navbar__profile-btn {
+  border-radius: 0.7rem;
+  padding: 0.32rem 0.45rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--nav-text);
+  transition: background-color 0.2s ease;
+}
+
+.public-navbar__profile-btn:hover {
+  background: var(--nav-primary-soft);
+}
+
+.public-navbar__avatar {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: #2563eb;
+}
+
+.public-navbar__profile-name {
+  font-size: 0.86rem;
+  font-weight: 600;
+  max-width: 120px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.public-navbar__chevron {
+  width: 0.95rem;
+  height: 0.95rem;
+  color: var(--nav-muted);
+}
+
+.public-navbar__dropdown {
+  position: absolute;
+  top: calc(100% + 0.6rem);
+  right: 0;
+  width: 12rem;
+  background: #fff;
+  border: 1px solid var(--nav-border);
+  border-radius: 0.8rem;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+  padding: 0.35rem;
+  display: grid;
+}
+
+.public-navbar__dropdown-item {
+  text-decoration: none;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  border-radius: 0.55rem;
+  padding: 0.58rem 0.65rem;
+  color: var(--nav-text);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.public-navbar__dropdown-item:hover {
+  background: #f8fafc;
+}
+
+.public-navbar__dropdown-item--danger {
+  color: #b42318;
+}
+
+.public-navbar__menu-btn {
+  display: none;
+}
+
+.public-navbar__mobile-panel {
+  max-height: 0;
+  overflow: hidden;
+  border-top: 1px solid transparent;
+  transition: max-height 0.35s ease, border-color 0.25s ease;
+  background: #fff;
+}
+
+.public-navbar__mobile-panel--open {
+  max-height: 24rem;
+  border-color: var(--nav-border);
+}
+
+.public-navbar__mobile-links {
+  padding: 0.7rem 1rem 1rem;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.public-navbar__mobile-link,
+.public-navbar__mobile-cta {
+  text-decoration: none;
+  border: 0;
+  text-align: left;
+  width: 100%;
+  padding: 0.72rem 0.8rem;
+  border-radius: 0.7rem;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--nav-text);
+  background: #f8fafc;
+}
+
+.public-navbar__mobile-link--active {
+  background: var(--nav-primary-soft);
+  color: var(--nav-primary);
+}
+
+.public-navbar__mobile-cta {
+  color: #fff;
+  background: linear-gradient(135deg, #19408a 0%, #2563eb 100%);
+  text-align: center;
+}
+
+.public-navbar__mobile-cta--ghost {
+  color: var(--nav-primary);
+  background: #eef3ff;
+}
+
+.public-navbar__mobile-user-actions {
+  display: grid;
+  gap: 0.45rem;
+}
+
+@media (max-width: 920px) {
+  .public-navbar__desktop-links,
+  .public-navbar__profile-name,
+  .public-navbar__profile,
+  .public-navbar__icon-btn,
+  .public-navbar__login-btn {
+    display: none;
+  }
+
+  .public-navbar__menu-btn {
+    display: grid;
+  }
+
+  .public-navbar__container {
+    height: 4.2rem;
+  }
+}

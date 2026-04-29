@@ -1,0 +1,15 @@
+services:
+  backend:
+    build: { context: ./backend, target: deps }
+    command: npx nodemon src/server.js
+    volumes: [./backend/src:/app/src:ro]
+    environment: [NODE_ENV=development]
+    env_file: ./backend/.env
+
+  frontend:
+    image: node:20-alpine
+    working_dir: /app
+    command: npm run dev -- --host
+    volumes: [./frontend:/app, /app/node_modules]
+    ports: ["3000:3000"]
+    environment: [VITE_API_URL=http://localhost:5000/api]

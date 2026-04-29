@@ -1,0 +1,11 @@
+node_modules
+.env
+dist
+coverage
+src/tests
+*.test.jsx
+*.test.js
+.git
+README.md
+Dockerfile
+.dockerignore
