@@ -230,9 +230,7 @@ export default function AboutPage() {
         <div className="about-hero__content">
           <p className="about-hero__kicker">About Our Institution</p>
           <h1>Excellence in Education, Innovation, and Discipline</h1>
-          <p className="about-hero__highlight">
-            This project is created by the Computer Science and Engineering (Data Science) Department.
-          </p>
+          
           <div className="about-hero__actions">
             <a href="#overview" className="about-btn about-btn--primary">
               Explore More
