@@ -154,11 +154,16 @@ timetableSchema.statics.getFacultySubjects = function getFacultySubjects(
   facultyId,
   academicYear
 ) {
-  return this.find({
+  const filter = {
     facultyId,
-    academicYear,
     isActive: true,
-  })
+  };
+
+  if (academicYear) {
+    filter.academicYear = academicYear;
+  }
+
+  return this.find(filter)
     .populate({ path: "subjectId" })
     .populate({ path: "departmentId", select: "name code" });
 };
@@ -229,11 +234,16 @@ timetableSchema.statics.getFacultyTimetable = async function getFacultyTimetable
   facultyId,
   academicYear
 ) {
-  const rows = await this.find({
+  const filter = {
     facultyId,
-    academicYear,
     isActive: true,
-  })
+  };
+
+  if (academicYear) {
+    filter.academicYear = academicYear;
+  }
+
+  const rows = await this.find(filter)
     .populate({ path: "subjectId", select: "name subjectCode type" })
     .populate({ path: "departmentId", select: "name code" })
     .lean();
