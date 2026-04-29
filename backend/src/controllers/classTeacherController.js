@@ -284,7 +284,11 @@ const getAssignedClassTimetables = catchAsync(async (req, res) => {
     .lean();
 
   if (!availableRows.length) {
-    throw new AppError(404, "No class timetable assignments found for this class teacher");
+    return sendSuccess(res, 200, "Assigned class timetables fetched", {
+      academicYear: requestedAcademicYear || "",
+      availableAcademicYears: [],
+      classes: [],
+    });
   }
 
   const availableAcademicYears = [...new Set(availableRows.map((row) => row.academicYear).filter(Boolean))]
@@ -298,7 +302,11 @@ const getAssignedClassTimetables = catchAsync(async (req, res) => {
   );
 
   if (!scopedRows.length) {
-    throw new AppError(404, "No class timetable assignments found for the selected academic year");
+    return sendSuccess(res, 200, "Assigned class timetables fetched", {
+      academicYear,
+      availableAcademicYears,
+      classes: [],
+    });
   }
 
   const classKeys = new Map();

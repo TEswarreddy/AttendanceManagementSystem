@@ -129,6 +129,15 @@ export default function FacultyDashboard() {
     select: (response) => response?.data,
   })
 
+  useEffect(() => {
+    const refreshTimetable = () => {
+      timetableQuery.refetch()
+    }
+
+    window.addEventListener('timetable-updated', refreshTimetable)
+    return () => window.removeEventListener('timetable-updated', refreshTimetable)
+  }, [timetableQuery])
+
   const timetableDays = useMemo(() => {
     const data = timetableQuery.data || {}
     return DAY_COLUMNS.reduce((acc, day) => {

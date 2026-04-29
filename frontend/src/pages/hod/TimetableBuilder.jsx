@@ -419,6 +419,7 @@ export default function TimetableBuilder() {
     },
     onSuccess: (meta) => {
       if (!meta?.targetTimetableId) {
+        window.dispatchEvent(new CustomEvent('timetable-updated', { detail: { at: Date.now() } }))
         facultyTimetablesQuery.refetch()
         return
       }
@@ -427,6 +428,7 @@ export default function TimetableBuilder() {
       setLastChange(meta)
       toast.success('Timetable cell saved')
       setCellModal((current) => ({ ...current, open: false }))
+      window.dispatchEvent(new CustomEvent('timetable-updated', { detail: { at: Date.now() } }))
       facultyTimetablesQuery.refetch()
     },
     onError: (error) => {
@@ -479,6 +481,7 @@ export default function TimetableBuilder() {
       setLastChange(meta)
       toast.success('Slot cleared')
       setCellModal((current) => ({ ...current, open: false }))
+      window.dispatchEvent(new CustomEvent('timetable-updated', { detail: { at: Date.now() } }))
       facultyTimetablesQuery.refetch()
     },
     onError: (error) => toast.error(error.message || 'Unable to clear slot'),
@@ -507,6 +510,7 @@ export default function TimetableBuilder() {
       setEntriesOverride(previousEntries)
       setLastChange(null)
       toast.success('Last change has been undone')
+      window.dispatchEvent(new CustomEvent('timetable-updated', { detail: { at: Date.now() } }))
       facultyTimetablesQuery.refetch()
     },
     onError: (error) => toast.error(error.message || 'Unable to undo last change'),

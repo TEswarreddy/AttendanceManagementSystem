@@ -48,6 +48,23 @@ void ShortageList;
 void qrService;
 void smsAlertService;
 
+const resolveClassTeacherForClass = async ({ departmentId, semester, section, academicYear }) => {
+  const normalizedSection = String(section || "").toUpperCase();
+  const normalizedAcademicYear = String(academicYear || "").trim();
+
+  const faculty = await Faculty.findOne({
+    departmentId,
+    isActive: true,
+    "classTeacherAssignment.semester": Number(semester),
+    "classTeacherAssignment.section": normalizedSection,
+    "classTeacherAssignment.academicYear": normalizedAcademicYear,
+  })
+    .select("_id")
+    .lean();
+
+  return faculty?._id || null;
+};
+
 const systemConfigSchema = new mongoose.Schema(
   {
     key: {
@@ -1116,9 +1133,16 @@ const createTimetable = catchAsync(async (req, res) => {
     schedule,
   });
 
+  const resolvedClassTeacherId = classTeacherId || (await resolveClassTeacherForClass({
+    departmentId,
+    semester,
+    section,
+    academicYear,
+  }));
+
   const timetable = await Timetable.create({
     facultyId,
-    classTeacherId,
+    classTeacherId: resolvedClassTeacherId,
     subjectId,
     subjectType,
     departmentId,
@@ -1172,6 +1196,16 @@ const updateTimetable = catchAsync(async (req, res) => {
   if (req.body.section !== undefined) timetable.section = String(req.body.section).toUpperCase();
   if (req.body.academicYear !== undefined) timetable.academicYear = req.body.academicYear;
   if (req.body.isActive !== undefined) timetable.isActive = Boolean(req.body.isActive);
+
+  if (req.body.classTeacherId === undefined) {
+    timetable.classTeacherId = await resolveClassTeacherForClass({
+      departmentId: timetable.departmentId,
+      semester: timetable.semester,
+      section: timetable.section,
+      academicYear: timetable.academicYear,
+    });
+  }
+
   timetable.schedule = nextSchedule;
 
   await timetable.save();

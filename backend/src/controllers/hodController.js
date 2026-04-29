@@ -93,6 +93,24 @@ const normalizePage = (query) => {
   return { page, limit, skip: (page - 1) * limit };
 };
 
+
+const resolveClassTeacherForClass = async ({ departmentId, semester, section, academicYear }) => {
+  const normalizedSection = String(section || '').toUpperCase();
+  const normalizedAcademicYear = String(academicYear || '').trim();
+
+  const faculty = await Faculty.findOne({
+    departmentId,
+    isActive: true,
+    "classTeacherAssignment.semester": Number(semester),
+    "classTeacherAssignment.section": normalizedSection,
+    "classTeacherAssignment.academicYear": normalizedAcademicYear,
+  })
+    .select('_id')
+    .lean();
+
+  return faculty?._id || null;
+};
+
 const getHodDepartmentId = async (req) => {
   if (req.user?.departmentId && mongoose.Types.ObjectId.isValid(String(req.user.departmentId))) {
     return new mongoose.Types.ObjectId(String(req.user.departmentId));
@@ -616,9 +634,16 @@ const createTimetable = catchAsync(async (req, res) => {
     schedule,
   });
 
+  const resolvedClassTeacherId = classTeacherId || (await resolveClassTeacherForClass({
+    departmentId: hodDeptId,
+    semester,
+    section,
+    academicYear,
+  }));
+
   const timetable = await Timetable.create({
     facultyId,
-    classTeacherId,
+    classTeacherId: resolvedClassTeacherId,
     subjectId,
     subjectType,
     departmentId: hodDeptId,
@@ -671,9 +696,20 @@ const updateTimetable = catchAsync(async (req, res) => {
   });
 
   if (req.body.facultyId !== undefined) timetable.facultyId = req.body.facultyId;
+  if (req.body.classTeacherId !== undefined) timetable.classTeacherId = req.body.classTeacherId;
   if (req.body.subjectId !== undefined) timetable.subjectId = req.body.subjectId;
   if (req.body.subjectType !== undefined) timetable.subjectType = req.body.subjectType;
   if (req.body.academicYear !== undefined) timetable.academicYear = req.body.academicYear;
+
+  if (req.body.classTeacherId === undefined) {
+    timetable.classTeacherId = await resolveClassTeacherForClass({
+      departmentId: timetable.departmentId,
+      semester: timetable.semester,
+      section: timetable.section,
+      academicYear: timetable.academicYear,
+    });
+  }
+
   timetable.schedule = nextSchedule;
 
   await timetable.save();
