@@ -73,6 +73,11 @@ export default function TimetableBuilder() {
     queryFn: () => apiGet('/subjects'),
   })
 
+  const studentsQuery = useQuery({
+    queryKey: ['hod-timetable', 'students-for-classes'],
+    queryFn: () => apiGet('/students', { page: 1, limit: 5000, includeInactive: 'false' }),
+  })
+
   const facultyRows = useMemo(() => {
     const payload = readData(facultyQuery.data)
     const rows = toList(payload.data || payload.items || payload)
@@ -80,6 +85,12 @@ export default function TimetableBuilder() {
   }, [facultyQuery.data])
 
   const periods = FALLBACK_PERIODS
+
+  const studentRows = useMemo(() => {
+    const payload = readData(studentsQuery.data)
+    const rows = toList(payload.items || payload.data || payload.students || payload)
+    return rows
+  }, [studentsQuery.data])
 
   const subjectRows = useMemo(() => {
     const payload = readData(subjectsQuery.data)
@@ -160,39 +171,31 @@ export default function TimetableBuilder() {
   const classOptions = useMemo(() => {
     const map = new Map()
 
-    entries.forEach((entry) => {
-      const key = parseClassKey(entry.semester, entry.section)
-      if (!map.has(key)) {
-        map.set(key, {
-          key,
-          semester: entry.semester,
-          section: entry.section,
-          academicYear: entry.academicYear,
-        })
-      }
-    })
-
-    if (map.size === 0) {
-      facultyRows.forEach((faculty) => {
-        toList(faculty.classesAssigned).forEach((row) => {
-          const key = parseClassKey(row.semester, row.section)
-          if (!map.has(key)) {
-            map.set(key, {
-              key,
-              semester: row.semester,
-              section: row.section,
-              academicYear: row.academicYear,
-            })
-          }
-        })
-      })
+    const addClass = (semesterValue, sectionValue, academicYearValue = '') => {
+      const semester = Number(semesterValue)
+      const section = String(sectionValue || '').toUpperCase()
+      if (!semester || !section) return
+      const key = parseClassKey(semester, section)
+      if (map.has(key)) return
+      map.set(key, { key, semester, section, academicYear: academicYearValue || '' })
     }
 
+    entries.forEach((entry) => addClass(entry.semester, entry.section, entry.academicYear))
+
+    facultyRows.forEach((faculty) => {
+      toList(faculty.classesAssigned).forEach((row) => addClass(row.semester, row.section, row.academicYear))
+    })
+
+    studentRows.forEach((student) => addClass(student.semester, student.section, student.academicYear))
+
     return Array.from(map.values()).sort((a, b) => a.key.localeCompare(b.key))
-  }, [entries, facultyRows])
+  }, [entries, facultyRows, studentRows])
 
   useEffect(() => {
-    if (!selectedClassKey && classOptions.length) {
+    if (!classOptions.length) return
+
+    const hasSelected = classOptions.some((item) => item.key === selectedClassKey)
+    if (!selectedClassKey || !hasSelected) {
       setSelectedClassKey(classOptions[0].key)
       setSelectedAcademicYear(classOptions[0].academicYear || '')
     }
