@@ -12,7 +12,7 @@ const upload = multer({
 
 router.use(protect);
 
-router.get("/", authorize("admin", "hod", "faculty"), adminController.getStudents);
+router.get("/", authorize("admin", "hod", "faculty", "class_teacher", "time_table_coordinator", "attendance_coordinator"), adminController.getStudents);
 router.post("/", authorize("admin", "hod"), adminController.createStudent);
 router.post("/bulk-upload", authorize("admin", "hod"), upload.single("file"), adminController.bulkCreateStudents);
 router.put("/:id", authorize("admin", "hod"), adminController.updateStudent);
