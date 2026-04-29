@@ -335,14 +335,9 @@ export default function TimetableBuilder() {
 
       if (conflicts.length) {
         const conflict = conflicts[0]
-        const conflictSubject = subjectMap.get(String(conflict.subjectId || ''))
-        const conflictFaculty = facultyMap.get(String(conflict.facultyId || ''))
-
-        throw new Error(
-          `Period ${conflict.periodNumber} is already occupied on ${conflict.day} by ${
-            conflictSubject?.name || conflictSubject?.subjectName || 'a subject'
-          } (${conflictFaculty?.name || 'faculty'}) for ${formatClassLabel(conflict.semester, conflict.section)}.`
-        )
+        const isSameClass =
+          Number(conflict.semester) === Number(resolvedClass.semester) && String(conflict.section) === String(resolvedClass.section)
+        throw new Error(isSameClass ? 'This class already has a subject in this period' : 'Faculty already assigned for this period')
       }
 
       const reusableEntry = entries.find(
@@ -437,7 +432,11 @@ export default function TimetableBuilder() {
     onError: (error) => {
       const message = error.message || 'Unable to save timetable cell'
       toast.error(message)
-      if (/occupied|clash|conflict/i.test(String(message))) {
+      if (
+        /occupied|clash|conflict/i.test(String(message)) ||
+        /This class already has a subject in this period/i.test(String(message)) ||
+        /Faculty already assigned for this period/i.test(String(message))
+      ) {
         setConflictDialog({ open: true, message })
       }
       facultyTimetablesQuery.refetch()
@@ -632,7 +631,7 @@ export default function TimetableBuilder() {
                   type="text"
                   value={searchQuery}
                   onChange={(event) => setSearchQuery(event.target.value)}
-                  placeholder="e.g. Supriya, S7-A, AI"
+                  placeholder="Search by faculty, class, or subject"
                   className="w-full rounded-lg border border-slate-300 px-3 py-2"
                 />
               </label>
