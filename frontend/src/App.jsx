@@ -6,6 +6,7 @@ import { Toaster } from 'react-hot-toast'
 import AuthProvider, { useAuth } from '@/context/AuthContext'
 import ProtectedRoute from '@/components/shared/ProtectedRoute'
 import { FullPageSpinner } from '@/components/shared/Spinner'
+import GlobalFooter from '@/components/shared/GlobalFooter'
 
 const LoginPage = lazy(() => import('@/pages/LoginPage'))
 const HomePage = lazy(() => import('@/pages/HomePage'))
@@ -180,7 +181,12 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <BrowserRouter>
-          <AppRoutes />
+          <div className="min-h-screen flex flex-col">
+            <main className="flex-1">
+              <AppRoutes />
+            </main>
+            <GlobalFooter />
+          </div>
           <Toaster position="top-right" />
         </BrowserRouter>
       </AuthProvider>

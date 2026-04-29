@@ -439,32 +439,6 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <footer className="about-footer" id="contact">
-        <div>
-          <h3>Annamacharya Institute of Technology and Sciences, Tirupati</h3>
-          <p>&copy; {new Date().getFullYear()} Attendance Management System. All rights reserved.</p>
-        </div>
-        <div>
-          <h4>Quick Links</h4>
-          <ul>
-            <li>
-              <Link to="/">Home</Link>
-            </li>
-            <li>
-              <a href="#overview">College</a>
-            </li>
-            <li>
-              <a href="#development">Developers</a>
-            </li>
-          </ul>
-        </div>
-        <div>
-          <h4>Contact Info</h4>
-          <p>Tirupati, Andhra Pradesh</p>
-          <p>Phone: +91-XXXXXXXXXX</p>
-          <p>Email: info@aits.edu.in</p>
-        </div>
-      </footer>
     </div>
   )
 }
