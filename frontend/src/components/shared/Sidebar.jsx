@@ -104,6 +104,7 @@ const ROLE_MENU = {
     { label: 'Edit Attendance', to: '/faculty/edit-attendance', icon: PencilSquareIcon },
     { label: 'QR Attendance', to: '/faculty/qr', icon: QrCodeIcon },
     { label: 'Class Reports', to: '/faculty/reports', icon: ChartBarIcon },
+    { label: 'Faculty Timetable', to: '/faculty/dashboard', icon: CalendarDaysIcon },
     { label: 'Timetable Builder', to: '/ttc/timetable', icon: CalendarDaysIcon },
     { label: 'Notifications', to: '/notifications', icon: BellAlertIcon },
     { label: 'Profile', to: '/profile', icon: UserCircleIcon },
