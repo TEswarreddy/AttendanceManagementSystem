@@ -234,8 +234,12 @@ timetableSchema.statics.getFacultyTimetable = async function getFacultyTimetable
   facultyId,
   academicYear
 ) {
+  const facultyIds = (Array.isArray(facultyId) ? facultyId : [facultyId])
+    .filter(Boolean)
+    .map((value) => new mongoose.Types.ObjectId(String(value)));
+
   const filter = {
-    facultyId,
+    facultyId: facultyIds.length > 1 ? { $in: facultyIds } : facultyIds[0],
     isActive: true,
   };
 
