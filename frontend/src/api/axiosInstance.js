@@ -1,7 +1,8 @@
 import axios from 'axios'
 import { getUserFriendlyErrorMessage } from '@/utils/errorMessages'
+import { resolveApiBaseUrl } from '@/api/resolveApiBaseUrl'
 
-const BASE_URL = import.meta.env.VITE_API_URL || '/api'
+const BASE_URL = resolveApiBaseUrl(import.meta.env.VITE_API_URL)
 const readStorage = (key) => localStorage.getItem(key) || sessionStorage.getItem(key)
 
 const api = axios.create({

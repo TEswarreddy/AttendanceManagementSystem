@@ -1,7 +1,8 @@
 import axios from 'axios'
 import { getUserFriendlyErrorMessage } from '@/utils/errorMessages'
+import { resolveApiBaseUrl } from '@/api/resolveApiBaseUrl'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
+const API_BASE_URL = resolveApiBaseUrl(import.meta.env.VITE_API_URL)
 const ACCESS_TOKEN_KEY = 'accessToken'
 const REFRESH_TOKEN_KEY = 'refreshToken'
 
