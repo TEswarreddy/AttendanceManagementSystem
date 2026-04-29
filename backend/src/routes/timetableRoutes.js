@@ -24,7 +24,7 @@ router.get(
 		const { academicYear, day } = req.query;
 
 		const requestedFacultyId =
-			req.user.role === "faculty" || req.user.role === "class_teacher" || req.user.role === "attendance_coordinator"
+			req.user.role === "faculty" || req.user.role === "class_teacher"
 				? req.user.profileId
 				: req.query.facultyId;
 
