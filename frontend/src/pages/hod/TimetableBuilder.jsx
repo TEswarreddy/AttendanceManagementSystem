@@ -156,6 +156,9 @@ export default function TimetableBuilder() {
         periodNumber: Number(slot.periodNumber),
         roomNo: slot.roomNo || '',
         isLab: Boolean(slot.isLab),
+        subjectName: item.subjectName || item.subjectId?.name || item.subjectId?.subjectName || '',
+        subjectCode: item.subjectCode || item.subjectId?.subjectCode || item.subjectId?.code || '',
+        facultyName: item.facultyName || item.facultyId?.name || '',
         subjectType: item.subjectType || item.subjectId?.type || (slot.isLab ? 'lab' : 'theory'),
         schedule,
       }))
@@ -259,6 +262,13 @@ export default function TimetableBuilder() {
   }, [visibleEntries])
 
   const getCell = (day, periodNumber) => gridMap.get(`${day.toLowerCase()}-${periodNumber}`)
+  const getSubjectType = (entry) => {
+    const rawType = String(entry?.subjectType || '').trim().toLowerCase()
+    if (!rawType || rawType === 'null' || rawType === 'undefined') {
+      return entry?.isLab ? 'lab' : 'theory'
+    }
+    return rawType
+  }
 
   const applyLocalTimetablePatch = (currentEntries, meta) => {
     const cleaned = toList(currentEntries).filter((entry) => String(entry.timetableId) !== String(meta.targetTimetableId))
@@ -274,6 +284,9 @@ export default function TimetableBuilder() {
       periodNumber: Number(slot.periodNumber),
       roomNo: slot.roomNo || '',
       isLab: Boolean(slot.isLab),
+      subjectName: meta.subjectName || '',
+      subjectCode: meta.subjectCode || '',
+      facultyName: meta.facultyName || '',
       subjectType: meta.subjectType || 'theory',
       schedule: toList(meta.schedule),
     }))
@@ -392,6 +405,9 @@ export default function TimetableBuilder() {
           facultyId: body.facultyId,
           departmentId: body.departmentId,
           subjectType: body.subjectType,
+          subjectName: subjectMap.get(String(body.subjectId))?.name || subjectMap.get(String(body.subjectId))?.subjectName || '',
+          subjectCode: subjectMap.get(String(body.subjectId))?.subjectCode || subjectMap.get(String(body.subjectId))?.code || '',
+          facultyName: facultyMap.get(String(body.facultyId))?.name || '',
           previousEntries,
           previousTimetable,
           previousSchedule: toList(previousTimetable?.schedule),
@@ -412,6 +428,9 @@ export default function TimetableBuilder() {
         facultyId: body.facultyId,
         departmentId: body.departmentId,
         subjectType: body.subjectType,
+        subjectName: subjectMap.get(String(body.subjectId))?.name || subjectMap.get(String(body.subjectId))?.subjectName || '',
+        subjectCode: subjectMap.get(String(body.subjectId))?.subjectCode || subjectMap.get(String(body.subjectId))?.code || '',
+        facultyName: facultyMap.get(String(body.facultyId))?.name || '',
         previousEntries,
         previousTimetable: null,
         previousSchedule: [],
@@ -470,8 +489,11 @@ export default function TimetableBuilder() {
         subjectId: previousTimetable?.subjectId,
         facultyId: previousTimetable?.facultyId,
         departmentId: previousTimetable?.departmentId,
-        subjectType: previousTimetable?.subjectType,
-        previousEntries,
+      subjectType: previousTimetable?.subjectType,
+      subjectName: previousTimetable?.subjectName || '',
+      subjectCode: previousTimetable?.subjectCode || '',
+      facultyName: previousTimetable?.facultyName || '',
+      previousEntries,
         previousTimetable,
         previousSchedule: toList(previousTimetable?.schedule),
       }
@@ -673,13 +695,36 @@ export default function TimetableBuilder() {
                   {DAYS.map((dayLabel, dayIndex) => (
                     <tr key={dayLabel} className="border-b border-slate-200 even:bg-slate-50">
                       <th className="px-3 py-2 text-left align-top font-semibold text-slate-900">{dayLabel}</th>
-                      {periods.map((period, periodIndex) => {
+                      {periods.map((period) => {
                         const dayKey = DAY_KEYS[dayIndex]
                         const cell = getCell(dayLabel, period.number)
+                        const previousCell = period.number > 1 ? getCell(dayLabel, period.number - 1) : null
+                        const previousCellType = getSubjectType(previousCell)
+                        const currentCellType = getSubjectType(cell)
+                        const isCurrentLab = currentCellType === 'lab'
+                        const shouldSkipLabCell =
+                          Boolean(cell) &&
+                          isCurrentLab &&
+                          Boolean(previousCell) &&
+                          previousCell.timetableId === cell.timetableId &&
+                          previousCellType === 'lab'
+                        if (shouldSkipLabCell) {
+                          return null
+                        }
                         const subject = subjectMap.get(String(cell?.subjectId || ''))
                         const faculty = facultyMap.get(String(cell?.facultyId || ''))
                         const isOccupied = Boolean(cell)
-                        const isLab = String(cell?.subjectType || '').toLowerCase() === 'lab' || Boolean(cell?.isLab)
+                        const isLab = currentCellType === 'lab'
+                        let span = 1
+                        if (cell && isLab) {
+                          let nextPeriod = period.number + 1
+                          while (nextPeriod <= periods.length) {
+                            const nextCell = getCell(dayLabel, nextPeriod)
+                            if (!nextCell || nextCell.timetableId !== cell.timetableId || getSubjectType(nextCell) !== 'lab') break
+                            span += 1
+                            nextPeriod += 1
+                          }
+                        }
                         const isSearchMatch = !cell || matchesSearch(cell)
 
                         const detailText = isOccupied
@@ -695,7 +740,7 @@ export default function TimetableBuilder() {
                           : 'border-slate-300 bg-white text-slate-600 hover:border-slate-500'
 
                         return (
-                          <td key={`${dayKey}-${period.number}`} className="px-2 py-2">
+                          <td key={`${dayKey}-${period.number}`} colSpan={span} className="px-2 py-2">
                             <div
                               title={detailText}
                               className={`w-full rounded-lg border px-2 py-2 text-left text-xs transition ${slotClass} ${
@@ -704,9 +749,9 @@ export default function TimetableBuilder() {
                             >
                               {cell ? (
                                 <>
-                                  <p className="font-semibold">{subject?.name || subject?.subjectName || 'Subject'}</p>
-                                  <p>{subject?.subjectCode || subject?.code || '-'}</p>
-                                  <p>{faculty?.name || 'Faculty'}</p>
+                                  <p className="font-semibold">{subject?.name || subject?.subjectName || cell?.subjectName || 'Subject'}</p>
+                                  <p>{subject?.subjectCode || subject?.code || cell?.subjectCode || '-'}</p>
+                                  <p>{faculty?.name || cell?.facultyName || 'Faculty'}</p>
                                   <p>{formatClassLabel(cell.semester, cell.section)}</p>
                                   <p>Room {cell.roomNo || '-'}</p>
                                   <div className="mt-2 flex items-center justify-between gap-2">
