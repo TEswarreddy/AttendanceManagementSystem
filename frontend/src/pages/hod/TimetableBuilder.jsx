@@ -73,36 +73,13 @@ export default function TimetableBuilder() {
     queryFn: () => apiGet('/subjects'),
   })
 
-  const periodsQuery = useQuery({
-    queryKey: ['hod-timetable', 'periods'],
-    queryFn: () => apiGet('/admin/periods'),
-  })
-
   const facultyRows = useMemo(() => {
     const payload = readData(facultyQuery.data)
     const rows = toList(payload.data || payload.items || payload)
     return rows
   }, [facultyQuery.data])
 
-  const periodRows = useMemo(() => {
-    const payload = readData(periodsQuery.data)
-    const rows = toList(payload.periods || payload.items || payload.data || payload)
-    return rows
-      .map((period) => {
-        const number = Number(period?.periodNumber)
-        if (!Number.isFinite(number)) return null
-        const start = period?.startTime || ''
-        const end = period?.endTime || ''
-        return {
-          number,
-          time: start && end ? `${start}-${end}` : period?.label || `Period ${number}`,
-        }
-      })
-      .filter(Boolean)
-      .sort((a, b) => a.number - b.number)
-  }, [periodsQuery.data])
-
-  const periods = periodRows.length ? periodRows : FALLBACK_PERIODS
+  const periods = FALLBACK_PERIODS
 
   const subjectRows = useMemo(() => {
     const payload = readData(subjectsQuery.data)
