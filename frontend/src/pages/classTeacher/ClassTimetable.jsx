@@ -54,6 +54,15 @@ export default function ClassTimetable() {
     select: (response) => response?.data || response || {},
   })
 
+  useEffect(() => {
+    const refreshTimetable = () => {
+      timetableQuery.refetch()
+    }
+
+    window.addEventListener('timetable-updated', refreshTimetable)
+    return () => window.removeEventListener('timetable-updated', refreshTimetable)
+  }, [timetableQuery])
+
   const payload = timetableQuery.data || {}
   const classes = toSafeArray(payload.classes)
   const availableAcademicYears = toSafeArray(payload.availableAcademicYears)

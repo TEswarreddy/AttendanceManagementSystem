@@ -176,6 +176,15 @@ export default function StudentTimetable() {
     queryFn: () => apiGet('/student/timetable'),
   })
 
+  useEffect(() => {
+    const refreshTimetable = () => {
+      timetableQuery.refetch()
+    }
+
+    window.addEventListener('timetable-updated', refreshTimetable)
+    return () => window.removeEventListener('timetable-updated', refreshTimetable)
+  }, [timetableQuery])
+
   const timetableData = useMemo(() => readTimetablePayload(timetableQuery.data), [timetableQuery.data])
 
   const dayBlocks = useMemo(() => {
