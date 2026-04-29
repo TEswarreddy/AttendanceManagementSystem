@@ -401,40 +401,59 @@ const sendApprovalNotification = async (to, decision, request, reviewRemarks) =>
   });
 };
 
-const validateScheduleSlots = async ({ departmentId, semester, section, schedule, excludeTimetableId }) => {
+const validateScheduleSlots = async ({ departmentId, semester, section, facultyId, schedule, excludeTimetableId }) => {
+  const slotKeys = new Set();
+  const normalizedSemester = Number(semester);
+  const normalizedSection = String(section).toUpperCase();
+  const normalizedFacultyId = facultyId ? String(facultyId) : null;
+
   for (const slot of schedule || []) {
     if (!slot?.day || !Number.isFinite(Number(slot.periodNumber))) {
       throw new AppError(400, "Each schedule slot must include day and periodNumber");
     }
 
-    if (!excludeTimetableId) {
-      try {
-        await Timetable.validatePeriodSlot(departmentId, Number(semester), String(section).toUpperCase(), slot.day, Number(slot.periodNumber));
-      } catch (error) {
-        throw new AppError(400, error.message || "Schedule period clash");
-      }
-      continue;
+    const normalizedDay = String(slot.day).trim();
+    const normalizedPeriodNumber = Number(slot.periodNumber);
+    const slotKey = `${normalizedDay.toLowerCase()}-${normalizedPeriodNumber}`;
+    if (slotKeys.has(slotKey)) {
+      throw new AppError(409, "This class already has a subject in this period");
     }
+    slotKeys.add(slotKey);
 
-    const clash = await Timetable.exists({
+    const classClash = await Timetable.exists({
       _id: { $ne: excludeTimetableId },
       departmentId,
-      semester: Number(semester),
-      section: String(section).toUpperCase(),
+      semester: normalizedSemester,
+      section: normalizedSection,
       isActive: true,
       schedule: {
         $elemMatch: {
-          day: slot.day,
-          periodNumber: Number(slot.periodNumber),
+          day: normalizedDay,
+          periodNumber: normalizedPeriodNumber,
         },
       },
     });
 
-    if (clash) {
-      throw new AppError(
-        400,
-        `Period ${slot.periodNumber} is already occupied on ${slot.day} for semester ${semester} section ${String(section).toUpperCase()}.`
-      );
+    if (classClash) {
+      throw new AppError(409, "This class already has a subject in this period");
+    }
+
+    if (normalizedFacultyId) {
+      const facultyClash = await Timetable.exists({
+        _id: { $ne: excludeTimetableId },
+        facultyId: normalizedFacultyId,
+        isActive: true,
+        schedule: {
+          $elemMatch: {
+            day: normalizedDay,
+            periodNumber: normalizedPeriodNumber,
+          },
+        },
+      });
+
+      if (facultyClash) {
+        throw new AppError(409, "Faculty already assigned for this period");
+      }
     }
   }
 };
@@ -593,6 +612,7 @@ const createTimetable = catchAsync(async (req, res) => {
     departmentId: hodDeptId,
     semester,
     section,
+    facultyId,
     schedule,
   });
 
@@ -645,6 +665,7 @@ const updateTimetable = catchAsync(async (req, res) => {
     departmentId: timetable.departmentId,
     semester: timetable.semester,
     section: timetable.section,
+    facultyId: req.body.facultyId ?? timetable.facultyId,
     schedule: nextSchedule,
     excludeTimetableId: timetable._id,
   });
