@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { NavLink } from 'react-router-dom'
 import {
   XMarkIcon,
@@ -117,6 +118,22 @@ export default function Sidebar({ isOpen, onClose }) {
   const role = user?.role === 'principal' ? 'admin' : user?.role || 'student'
   const menu = ROLE_MENU[role] || ROLE_MENU.student
 
+
+  useEffect(() => {
+    if (!isOpen) {
+      document.body.style.overflow = ''
+      return
+    }
+
+    if (window.matchMedia('(max-width: 1023px)').matches) {
+      document.body.style.overflow = 'hidden'
+    }
+
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [isOpen])
+
   return (
     <>
       {isOpen ? (
@@ -124,18 +141,20 @@ export default function Sidebar({ isOpen, onClose }) {
       ) : null}
 
       <aside
-        className={`fixed left-0 top-[4.5rem] z-40 h-[calc(100vh-4.5rem)] w-72 border-r border-white/20 bg-gradient-to-b from-slate-900 via-slate-900 to-primary-950 text-slate-100 shadow-2xl shadow-primary-950/40 transition-transform duration-300 ${
+        className={`fixed left-0 top-0 z-40 flex h-screen w-72 flex-col overflow-x-hidden border-r border-white/20 bg-gradient-to-b from-slate-900 via-slate-900 to-primary-950 text-slate-100 shadow-2xl shadow-primary-950/40 transition-transform duration-300 ${
           isOpen ? 'translate-x-0' : 'lg:translate-x-0 -translate-x-full'
         }`}
       >
-        <div className="flex items-center justify-between border-b border-white/10 px-4 py-3 lg:hidden">
+        <div className="mt-[4.5rem] flex items-center justify-between border-b border-white/10 px-4 py-3 lg:hidden">
           <p className="text-sm font-semibold text-white">Navigation</p>
           <button className="rounded-lg p-2 hover:bg-white/10" onClick={onClose} aria-label="Close menu">
             <XMarkIcon className="h-5 w-5" />
           </button>
         </div>
 
-        <nav className="custom-scroll space-y-1 overflow-y-auto px-3 py-3">
+        <div className="hidden h-[4.5rem] shrink-0 lg:block" aria-hidden="true" />
+
+        <nav className="custom-scroll flex-1 space-y-1 overflow-y-auto overflow-x-hidden px-3 py-3 scroll-smooth">
           {menu.map((item) => {
             const Icon = item.icon
 

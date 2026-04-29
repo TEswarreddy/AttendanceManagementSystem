@@ -90,6 +90,12 @@ textarea:focus-visible {
   color: #e2e8f0;
 }
 
+.custom-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.45) transparent;
+  overscroll-behavior: contain;
+}
+
 .custom-scroll::-webkit-scrollbar {
   width: 8px;
 }
